@@ -1,0 +1,7 @@
+{
+  "name": "Enfermería WhatsApp - Valoración y Reportes Clínicos",
+  "description": "Aplicación clínica de enfermería para registrar pacientes, valorar sistemas corporales con escalas médicas (Glasgow, EVA, Braden, Downton), y generar informes formateados para compartir por WhatsApp.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
