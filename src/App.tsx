@@ -43,6 +43,7 @@ import { EvolutionSection } from './components/EvolutionSection';
 import { AlertsCard } from './components/AlertsCard';
 import { ReportModal } from './components/ReportModal';
 import { PatientSelectorModal } from './components/PatientSelectorModal';
+import { AreaBotonera } from './components/AreaBotonera';
 
 const STORAGE_KEY_PATIENTS = 'ENFERMERIA_APP_PATIENTS_V2';
 const STORAGE_KEY_ACTIVE_ID = 'ENFERMERIA_APP_ACTIVE_ID_V2';
@@ -78,8 +79,80 @@ export default function App() {
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Controlled open/close states for each clinical card
+  const [openCards, setOpenCards] = useState<Record<string, boolean>>({
+    'card-patient-data': true,
+    'card-vital-signs': true,
+    'card-neurology': true,
+    'card-cardiorespiratory': false,
+    'card-fluids': false,
+    'card-pain': false,
+    'card-skin-mobility': false,
+    'card-medications': false,
+    'card-labs': false,
+    'card-evolution': false,
+  });
+
   // Active patient object
   const activePatient = patients.find((p) => p.id === activePatientId) || patients[0] || INITIAL_SAMPLE_PATIENT;
+
+  // Navigation handlers for the Botonera
+  const handleEnterArea = (cardId: string) => {
+    setOpenCards((prev) => ({ ...prev, [cardId]: true }));
+    setTimeout(() => {
+      const el = document.getElementById(cardId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.classList.add('ring-4', 'ring-teal-500', 'ring-offset-2', 'transition-all', 'duration-500');
+        setTimeout(() => {
+          el.classList.remove('ring-4', 'ring-teal-500', 'ring-offset-2');
+        }, 2200);
+      }
+    }, 60);
+  };
+
+  const handleExpandAll = () => {
+    setOpenCards({
+      'card-patient-data': true,
+      'card-vital-signs': true,
+      'card-neurology': true,
+      'card-cardiorespiratory': true,
+      'card-fluids': true,
+      'card-pain': true,
+      'card-skin-mobility': true,
+      'card-medications': true,
+      'card-labs': true,
+      'card-evolution': true,
+    });
+  };
+
+  const handleCollapseAll = () => {
+    setOpenCards({
+      'card-patient-data': false,
+      'card-vital-signs': false,
+      'card-neurology': false,
+      'card-cardiorespiratory': false,
+      'card-fluids': false,
+      'card-pain': false,
+      'card-skin-mobility': false,
+      'card-medications': false,
+      'card-labs': false,
+      'card-evolution': false,
+    });
+  };
+
+  const handleToggleCard = (cardId: string) => {
+    setOpenCards((prev) => ({ ...prev, [cardId]: !prev[cardId] }));
+  };
+
+  const handleScrollToBotonera = () => {
+    const el = document.getElementById('botonera-areas');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const allExpanded = Object.values(openCards).every(Boolean);
 
   // Persist patients to localStorage
   useEffect(() => {
@@ -219,9 +292,18 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 space-y-3">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 space-y-4">
         {/* Real-time Alerts Card */}
         <AlertsCard alerts={alerts} />
+
+        {/* Portada & Botonera con Botón Específico e Imagen Representativa por Área */}
+        <AreaBotonera
+          patient={activePatient}
+          onEnterArea={handleEnterArea}
+          onExpandAll={handleExpandAll}
+          onCollapseAll={handleCollapseAll}
+          allExpanded={allExpanded}
+        />
 
         {/* Quick Clinical Scales Summary Ribbon */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -296,9 +378,11 @@ export default function App() {
           title="Datos del Paciente e Historia Clínica"
           subtitle={`${activePatient.nombre || 'Sin nombre'} · ${activePatient.cama || 'Sin cama'} · ${activePatient.edad ? `${activePatient.edad} ${activePatient.unidadEdad}` : 'Edad sin definir'}`}
           icon={User}
-          imageSrc={SYSTEM_IMAGES.heroBanner}
+          imageSrc={SYSTEM_IMAGES.patientDataArt}
           accentColor="teal"
-          defaultOpen={true}
+          isOpen={openCards['card-patient-data']}
+          onToggle={() => handleToggleCard('card-patient-data')}
+          onBackToBotonera={handleScrollToBotonera}
           badgeContent={
             <span className="px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800 font-bold border border-teal-200">
               {activePatient.cama || 'Sin asignar'}
@@ -317,9 +401,11 @@ export default function App() {
           title="Signos Vitales y Parámetros Clínicos"
           subtitle="FC, FR, TA sistólica/diastólica, Temperatura y SpO₂ evaluados en vivo"
           icon={Heart}
-          imageSrc={SYSTEM_IMAGES.cardioRespArt}
+          imageSrc={SYSTEM_IMAGES.vitalSignsArt}
           accentColor="rose"
-          defaultOpen={true}
+          isOpen={openCards['card-vital-signs']}
+          onToggle={() => handleToggleCard('card-vital-signs')}
+          onBackToBotonera={handleScrollToBotonera}
           badgeContent={
             activePatient.v_fc && activePatient.v_tas ? (
               <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold border border-rose-200">
@@ -342,7 +428,9 @@ export default function App() {
           icon={Brain}
           imageSrc={SYSTEM_IMAGES.neuroArt}
           accentColor="indigo"
-          defaultOpen={true}
+          isOpen={openCards['card-neurology']}
+          onToggle={() => handleToggleCard('card-neurology')}
+          onBackToBotonera={handleScrollToBotonera}
           badgeContent={
             <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-bold border border-indigo-200">
               GCS {gcs.total}/15
@@ -363,7 +451,9 @@ export default function App() {
           icon={Wind}
           imageSrc={SYSTEM_IMAGES.cardioRespArt}
           accentColor="sky"
-          defaultOpen={false}
+          isOpen={openCards['card-cardiorespiratory']}
+          onToggle={() => handleToggleCard('card-cardiorespiratory')}
+          onBackToBotonera={handleScrollToBotonera}
         >
           <CardioPulmonarySection
             patient={activePatient}
@@ -377,9 +467,11 @@ export default function App() {
           title="Balance Hídrico, Renal & Nutrición"
           subtitle={`Balance: ${balance.balanceFormatted} · Sonda: ${activePatient.u_sonda} · Dieta: ${activePatient.nu_dieta}`}
           icon={Droplets}
-          imageSrc={SYSTEM_IMAGES.fluidMedsArt}
+          imageSrc={SYSTEM_IMAGES.fluidRenalArt}
           accentColor="emerald"
-          defaultOpen={false}
+          isOpen={openCards['card-fluids']}
+          onToggle={() => handleToggleCard('card-fluids')}
+          onBackToBotonera={handleScrollToBotonera}
           badgeContent={
             <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
               Neto: {balance.balance > 0 ? `+${balance.balance}` : balance.balance} ml
@@ -398,8 +490,11 @@ export default function App() {
           title="Evaluación del Dolor (Escala EVA 0–10)"
           subtitle={`Nivel: ${activePatient.d_eva}/10 · Tipo: ${activePatient.d_tipo} · Localización: ${activePatient.d_loc || 'No especificada'}`}
           icon={Smile}
+          imageSrc={SYSTEM_IMAGES.painArt}
           accentColor="amber"
-          defaultOpen={false}
+          isOpen={openCards['card-pain']}
+          onToggle={() => handleToggleCard('card-pain')}
+          onBackToBotonera={handleScrollToBotonera}
           badgeContent={
             <span className={`px-2 py-0.5 rounded-full font-bold border ${activePatient.d_eva >= 7 ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>
               EVA {activePatient.d_eva}/10
@@ -420,7 +515,9 @@ export default function App() {
           icon={Shield}
           imageSrc={SYSTEM_IMAGES.skinMobilityArt}
           accentColor="purple"
-          defaultOpen={false}
+          isOpen={openCards['card-skin-mobility']}
+          onToggle={() => handleToggleCard('card-skin-mobility')}
+          onBackToBotonera={handleScrollToBotonera}
         >
           <SkinMobilitySection
             patient={activePatient}
@@ -434,9 +531,11 @@ export default function App() {
           title="Medicación Prescripta del Turno"
           subtitle={`${activePatient.meds?.length || 0} fármaco(s) registrados · ${activePatient.meds?.filter((m) => m.given).length || 0} administrados`}
           icon={Pill}
-          imageSrc={SYSTEM_IMAGES.fluidMedsArt}
+          imageSrc={SYSTEM_IMAGES.medicationArt}
           accentColor="emerald"
-          defaultOpen={false}
+          isOpen={openCards['card-medications']}
+          onToggle={() => handleToggleCard('card-medications')}
+          onBackToBotonera={handleScrollToBotonera}
           badgeContent={
             <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
               {activePatient.meds?.length || 0} Fármacos
@@ -455,8 +554,11 @@ export default function App() {
           title="Analítica de Laboratorio & Microbiología"
           subtitle={`${activePatient.labs?.length || 0} determinaciones: Hepatograma, VSG, Coagulograma, Cultivos, Serología, etc.`}
           icon={TestTube}
+          imageSrc={SYSTEM_IMAGES.labArt}
           accentColor="teal"
-          defaultOpen={false}
+          isOpen={openCards['card-labs']}
+          onToggle={() => handleToggleCard('card-labs')}
+          onBackToBotonera={handleScrollToBotonera}
         >
           <LabSection
             patient={activePatient}
@@ -470,8 +572,11 @@ export default function App() {
           title="Nota de Evolución de Enfermería & Pase de Guardia"
           subtitle="Registro clínico con plantillas rápidas SOAP y DAR para entrega de turno"
           icon={FileText}
+          imageSrc={SYSTEM_IMAGES.evolutionArt}
           accentColor="slate"
-          defaultOpen={false}
+          isOpen={openCards['card-evolution']}
+          onToggle={() => handleToggleCard('card-evolution')}
+          onBackToBotonera={handleScrollToBotonera}
         >
           <EvolutionSection
             patient={activePatient}

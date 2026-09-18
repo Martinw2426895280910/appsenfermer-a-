@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, LucideIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp, LucideIcon, ArrowUp } from 'lucide-react';
 
 interface SystemCardProps {
   id: string;
@@ -10,6 +10,9 @@ interface SystemCardProps {
   accentColor: 'teal' | 'rose' | 'indigo' | 'sky' | 'amber' | 'emerald' | 'orange' | 'purple' | 'slate';
   badgeContent?: React.ReactNode;
   defaultOpen?: boolean;
+  isOpen?: boolean;
+  onToggle?: () => void;
+  onBackToBotonera?: () => void;
   children: React.ReactNode;
 }
 
@@ -88,24 +91,36 @@ export const SystemCard: React.FC<SystemCardProps> = ({
   accentColor,
   badgeContent,
   defaultOpen = false,
+  isOpen: controlledIsOpen,
+  onToggle,
+  onBackToBotonera,
   children,
 }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [uncontrolledIsOpen, setUncontrolledIsOpen] = useState(defaultOpen);
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : uncontrolledIsOpen;
   const theme = COLOR_MAP[accentColor];
+
+  const handleHeaderClick = () => {
+    if (onToggle) {
+      onToggle();
+    } else {
+      setUncontrolledIsOpen(!uncontrolledIsOpen);
+    }
+  };
 
   return (
     <div
       id={id}
-      className={`bg-white rounded-xl border ${theme.border} shadow-sm overflow-hidden transition-all duration-200 mb-3`}
+      className={`bg-white rounded-2xl border ${theme.border} shadow-sm overflow-hidden transition-all duration-200 mb-3`}
     >
       {/* Header Button */}
       <div
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleHeaderClick}
         className={`p-3 sm:p-4 ${theme.headerBg} cursor-pointer flex items-center justify-between gap-3 select-none hover:bg-opacity-90 transition-colors`}
       >
         <div className="flex items-center gap-3 min-w-0">
           {imageSrc ? (
-            <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-lg overflow-hidden border border-slate-200/80 shadow-sm shrink-0 bg-white">
+            <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden border border-slate-200/90 shadow-sm shrink-0 bg-white">
               <img
                 src={imageSrc}
                 alt={title}
@@ -115,7 +130,7 @@ export const SystemCard: React.FC<SystemCardProps> = ({
               <div className="absolute inset-0 bg-teal-900/10 pointer-events-none" />
             </div>
           ) : (
-            <div className={`w-10 h-10 rounded-lg ${theme.iconBg} flex items-center justify-center shrink-0 shadow-sm`}>
+            <div className={`w-11 h-11 rounded-xl ${theme.iconBg} flex items-center justify-center shrink-0 shadow-sm`}>
               <Icon className="w-5 h-5" />
             </div>
           )}
@@ -138,6 +153,22 @@ export const SystemCard: React.FC<SystemCardProps> = ({
               {badgeContent}
             </div>
           )}
+
+          {onBackToBotonera && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onBackToBotonera();
+              }}
+              className="hidden sm:flex text-[11px] font-bold text-slate-600 hover:text-teal-800 bg-white/90 hover:bg-white px-2.5 py-1 rounded-lg border border-slate-200 transition-colors items-center gap-1 shadow-2xs"
+              title="Volver a la botonera de áreas superior"
+            >
+              <ArrowUp className="w-3 h-3" />
+              <span>Botonera</span>
+            </button>
+          )}
+
           <div className="p-1 rounded-md text-slate-500 hover:text-slate-700 bg-white/70 shadow-2xs">
             {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
@@ -148,6 +179,21 @@ export const SystemCard: React.FC<SystemCardProps> = ({
       {isOpen && (
         <div className="p-4 sm:p-5 border-t border-slate-100 bg-white space-y-4 animate-in fade-in-50 duration-150">
           {children}
+
+          {/* Bottom quick return to botonera */}
+          {onBackToBotonera && (
+            <div className="pt-3 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span className="text-[11px]">¿Completaste esta área?</span>
+              <button
+                type="button"
+                onClick={onBackToBotonera}
+                className="text-xs font-bold text-teal-800 hover:text-teal-950 flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-200 transition-colors shadow-2xs"
+              >
+                <span>Subir a la botonera de áreas</span>
+                <ArrowUp className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
